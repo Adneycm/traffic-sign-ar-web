@@ -1,0 +1,25 @@
+.image-upload-placeholder {
+    border: 2px dashed #61dafb;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+    padding: 40px;
+    margin-top: 20px;
+    text-align: center;
+    color: #61dafb;
+    background-color: rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.image-upload-placeholder:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.image-display {
+    margin-top: 20px;
+    max-width: 100%;
+    max-height: 60vh;
+    border: 2px solid #61dafb;
+    border-radius: 10px;
+}

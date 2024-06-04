@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import VideoInput from './VideoInput';
+import ImageInput from './ImageInput';
 
 function App() {
   return (
@@ -9,7 +9,7 @@ function App() {
         <p>
           <code>traffic-sign-ar</code>
         </p>
-        <VideoInput />
+        <ImageInput />
       </header>
     </div>
   );

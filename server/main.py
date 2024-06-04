@@ -1,50 +1,55 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
+from overlay_sign import overlay_image_on_bad_traffic_signs
+from werkzeug.utils import secure_filename
+from roboflow import Roboflow
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-@app.route("/")
-@app.route("/home")
-def home():
-    return {"Home" : ["Welcome", "to", "the", "home", "page"]}
-
-@app.route("/about")
-def about():
-    return {"About" : ["Welcome", "to", "the", "about", "page"]}
-
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    if 'video' not in request.files:
+    print("[PREDICTING]")
+    if 'media' not in request.files:
         return jsonify({'error': 'No file part'}), 400
 
-    file = request.files['video']
+    file = request.files['media']
+    print(f"[[{request.files}]]")
 
     if file.filename == '':
         return jsonify({'error': 'No selected file'}), 400
 
-    if file and file.filename.endswith(('mp4', 'avi', 'mov', 'mkv')):
-        filename = file.filename
+    if file and file.filename.endswith(('jpg', 'jpeg', 'png')):
+        filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
-        # Process the video file here
-        return jsonify({'message': 'File successfully uploaded', 'filepath': filepath}), 200
+
+        print(f"Saved file to {filepath}")
+
+        rf = Roboflow(api_key="")
+        project = rf.workspace("viscomp-wj4le").project("traffic-sign-ar")
+        model = project.version(1).model
+
+        modified_file_path = overlay_image_on_bad_traffic_signs(filepath, 'stop.png', model)
+
+        # Assuming `overlay_image_on_bad_traffic_signs` saves the modified image in the same directory
+        if modified_file_path:
+            modified_file_url = f"/uploads/{os.path.basename(modified_file_path)}"
+            print(f"modified_file_url: {modified_file_url}")
+            return jsonify({'modifiedMediaUrl': modified_file_url}), 200
+        else:
+            return jsonify({'error': 'Processing failed'}), 500
 
     return jsonify({'error': 'Invalid file format'}), 400
 
-@app.route("/video-input", methods=["POST"])
-def handle_video_upload():
-  try:
-    video_file = request.files["video"]  # Access the video file from the request
-    # You can now save the video file to your server storage or perform other processing
-    return {"message": "Video uploaded successfully!"}, 200
-  except Exception as e:
-    return {"error": str(e)}, 400
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-
-
-if __name__=='__main__':
-  if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-  app.run(debug=True)
+if __name__ == '__main__':
+    if not os.path.exists(UPLOAD_FOLDER):
+        os.makedirs(UPLOAD_FOLDER)
+    app.run(debug=True)
