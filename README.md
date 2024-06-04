@@ -22,8 +22,12 @@ npm install
 
 npm start
 ```
+5. Adicione a chave da API no `server\main.py`:
+```python
+ rf = Roboflow(api_key="")
+```
 
-5. Abra um segundo terminal na pasta `server` e execute:
+6. Abra um segundo terminal na pasta `server` e execute:
 ```bash
  python .\main.py
 ```
